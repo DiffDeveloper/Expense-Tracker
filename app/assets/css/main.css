@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg-0: #f2eee4;
+  --bg-1: #fffbf2;
+  --bg-2: #f8f4ec;
+  --surface: rgba(255, 255, 255, 0.74);
+  --surface-strong: rgba(255, 255, 255, 0.9);
+  --border: rgba(34, 38, 42, 0.12);
+  --text-main: #1f232a;
+  --text-muted: #5b6068;
+  --accent: #0d7e69;
+  --accent-soft: #d6efe8;
+  --danger: #b14242;
+  --shadow: 0 20px 60px rgba(43, 46, 51, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__nuxt {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text-main);
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 208, 127, 0.25), transparent 38%),
+    radial-gradient(circle at 88% 30%, rgba(13, 126, 105, 0.22), transparent 42%),
+    linear-gradient(170deg, var(--bg-0), var(--bg-1) 50%, var(--bg-2));
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Sora', 'Trebuchet MS', sans-serif;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
