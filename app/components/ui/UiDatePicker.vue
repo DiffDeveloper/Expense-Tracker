@@ -245,7 +245,7 @@ function syncDisplayMonthToSelection() {
 }
 
 function handleOutsideClick(event: MouseEvent | TouchEvent) {
-  if (!open.value || !rootRef.value) {
+  if (!open.value || !rootRef.value || isMobile.value) {
     return
   }
 
