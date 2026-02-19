@@ -45,6 +45,7 @@ type ThemeOption = 'black-orange' | 'dark-white' | 'green-white'
 
 const route = useRoute()
 const router = useRouter()
+const requestHeaders = import.meta.server ? useRequestHeaders(['cookie']) : undefined
 
 function resolveDashboardTab(value: unknown): DashboardTab {
   const normalized = Array.isArray(value) ? value[0] : value
@@ -612,7 +613,9 @@ function resetExpenseForm() {
 }
 
 async function refreshSession() {
-  const response = await $fetch<{ user: UserPublic | null }>('/api/auth/me')
+  const response = await $fetch<{ user: UserPublic | null }>('/api/auth/me', {
+    headers: requestHeaders
+  })
   user.value = response.user
 }
 
@@ -622,7 +625,9 @@ async function loadMonthSummaries() {
     return
   }
 
-  const response = await $fetch<{ months: MonthlySummary[] }>('/api/reports/months')
+  const response = await $fetch<{ months: MonthlySummary[] }>('/api/reports/months', {
+    headers: requestHeaders
+  })
   monthSummaries.value = response.months
 }
 
@@ -632,7 +637,9 @@ async function loadMonthlyTrend() {
     return
   }
 
-  const response = await $fetch<{ points: MonthlyTrendPoint[] }>('/api/reports/trend?months=8')
+  const response = await $fetch<{ points: MonthlyTrendPoint[] }>('/api/reports/trend?months=8', {
+    headers: requestHeaders
+  })
   monthlyTrend.value = response.points
 }
 
@@ -644,7 +651,9 @@ async function loadMonthDetail() {
     return
   }
 
-  const response = await $fetch<{ month: MonthlyDetailResponse }>(`/api/reports/monthly?month=${selectedMonth.value}`)
+  const response = await $fetch<{ month: MonthlyDetailResponse }>(`/api/reports/monthly?month=${selectedMonth.value}`, {
+    headers: requestHeaders
+  })
   monthDetail.value = response.month
   expenses.value = response.month.expenses
   syncPlanFormWithMonthDetail()
