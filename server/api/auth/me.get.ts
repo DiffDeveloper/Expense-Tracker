@@ -1,7 +1,7 @@
 import { getOptionalSessionUser } from '../../utils/session'
 
-export default defineEventHandler((event) => {
-  const user = getOptionalSessionUser(event)
+export default defineEventHandler(async (event) => {
+  const user = await getOptionalSessionUser(event)
 
   if (!user) {
     return {

@@ -6,7 +6,8 @@ const TOKEN_HEADER = {
 }
 
 export const SESSION_COOKIE_NAME = 'expense_tracker_session'
-const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
+export const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
+export const SHORT_SESSION_TTL_SECONDS = 60 * 60 * 24
 
 export interface SessionPayload {
   userId: string
@@ -50,12 +51,17 @@ function signToken(unsignedToken: string, secret: string) {
   return createHmac('sha256', secret).update(unsignedToken).digest('base64url')
 }
 
-export function createSessionToken(userId: string, email: string, secret: string): string {
+export function createSessionToken(
+  userId: string,
+  email: string,
+  secret: string,
+  ttlSeconds = DEFAULT_SESSION_TTL_SECONDS
+): string {
   const header = base64UrlEncode(JSON.stringify(TOKEN_HEADER))
   const payload: SessionPayload = {
     userId,
     email,
-    exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS
+    exp: Math.floor(Date.now() / 1000) + ttlSeconds
   }
   const encodedPayload = base64UrlEncode(JSON.stringify(payload))
   const unsignedToken = `${header}.${encodedPayload}`
@@ -103,12 +109,12 @@ export function verifySessionToken(token: string, secret: string): SessionPayloa
   }
 }
 
-export function getSessionCookieOptions() {
+export function getSessionCookieOptions(maxAge = DEFAULT_SESSION_TTL_SECONDS) {
   return {
     httpOnly: true,
     path: '/',
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: SESSION_TTL_SECONDS
+    maxAge
   }
 }

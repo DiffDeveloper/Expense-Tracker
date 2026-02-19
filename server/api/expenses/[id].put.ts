@@ -4,7 +4,7 @@ import { parseExpenseInput } from '../../utils/validation'
 import { updateExpense } from '../../utils/db'
 
 export default defineEventHandler(async (event) => {
-  const user = requireSessionUser(event)
+  const user = await requireSessionUser(event)
   const expenseId = getRouterParam(event, 'id')
 
   if (!expenseId) {
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event)
   const input = parseExpenseInput(body)
-  const expense = updateExpense(user.id, expenseId, input)
+  const expense = await updateExpense(user.id, expenseId, input)
 
   if (!expense) {
     throw createError({

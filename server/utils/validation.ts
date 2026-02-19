@@ -1,7 +1,15 @@
 import { createError } from 'h3'
-import { EXPENSE_CATEGORIES, type ExpenseInput } from '~~/shared/types'
+import {
+  EXPENSE_CATEGORIES,
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+  type ExpenseInput,
+  type MonthlyPlanInput
+} from '~~/shared/types'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const monthPattern = /^\d{4}-(0[1-9]|1[0-2])$/
+const usernamePattern = /^[a-zA-Z0-9_]+$/
 
 export function normalizeEmail(value: unknown): string {
   if (typeof value !== 'string') {
@@ -31,6 +39,153 @@ export function assertValidCredentials(email: unknown, password: unknown) {
   return {
     email: normalizedEmail,
     password
+  }
+}
+
+export function assertValidRegistrationCredentials(
+  email: unknown,
+  username: unknown,
+  password: unknown,
+  confirmPassword: unknown
+) {
+  const credentials = assertValidCredentials(email, password)
+  const normalizedUsername = typeof username === 'string' ? username.trim() : ''
+
+  if (
+    normalizedUsername.length < 3
+    || normalizedUsername.length > 24
+    || !usernamePattern.test(normalizedUsername)
+  ) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Username must be 3-24 characters and use only letters, numbers, and underscore.'
+    })
+  }
+
+  if (typeof confirmPassword !== 'string' || confirmPassword !== credentials.password) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Password and confirm password must match.'
+    })
+  }
+
+  return {
+    ...credentials,
+    username: normalizedUsername
+  }
+}
+
+export function parseRememberMe(value: unknown): boolean {
+  if (typeof value === 'boolean') {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    return value.trim().toLowerCase() === 'true'
+  }
+
+  return false
+}
+
+export function parseCurrencyCode(value: unknown, fieldName = 'currencyCode'): CurrencyCode {
+  const currencyCode = typeof value === 'string' ? value.trim().toUpperCase() : ''
+
+  if (!SUPPORTED_CURRENCIES.includes(currencyCode as CurrencyCode)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `${fieldName} must be either USD or THB.`
+    })
+  }
+
+  return currencyCode as CurrencyCode
+}
+
+export function parseMonthValue(value: unknown, fieldName = 'month'): string {
+  const month = typeof value === 'string' ? value.trim() : ''
+
+  if (!monthPattern.test(month)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `${fieldName} must be in YYYY-MM format.`
+    })
+  }
+
+  return month
+}
+
+export function parseOptionalMonthValue(value: unknown): string | undefined {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  return parseMonthValue(value)
+}
+
+export function getMonthFromDateString(dateValue: string): string {
+  return dateValue.slice(0, 7)
+}
+
+export function parseMonthlyPlanInput(payload: unknown): MonthlyPlanInput {
+  const body = (payload || {}) as Record<string, unknown>
+  const month = parseMonthValue(body.month)
+
+  const normalizeNumericInput = (value: unknown, fallback?: number) => {
+    if (value === undefined || value === null || value === '') {
+      return fallback
+    }
+
+    if (typeof value === 'number') {
+      return value
+    }
+
+    if (typeof value === 'string') {
+      return Number.parseFloat(value)
+    }
+
+    return Number.NaN
+  }
+
+  const rawIncome = normalizeNumericInput(body.incomeAmount)
+
+  if (typeof rawIncome !== 'number' || Number.isNaN(rawIncome) || rawIncome <= 0 || rawIncome > 1_000_000_000) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'incomeAmount must be greater than 0.'
+    })
+  }
+
+  const rawSavings = normalizeNumericInput(body.savingsTarget, 0)
+
+  if (typeof rawSavings !== 'number' || Number.isNaN(rawSavings) || rawSavings < 0 || rawSavings > 1_000_000_000) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'savingsTarget must be a number between 0 and 1,000,000,000.'
+    })
+  }
+
+  const incomeAmount = Number(rawIncome.toFixed(2))
+  const savingsTarget = Number(rawSavings.toFixed(2))
+
+  if (savingsTarget > incomeAmount) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'savingsTarget cannot be greater than incomeAmount.'
+    })
+  }
+
+  const notes = typeof body.notes === 'string' ? body.notes.trim() : ''
+  if (notes.length > 300) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'notes cannot exceed 300 characters.'
+    })
+  }
+
+  return {
+    month,
+    incomeAmount,
+    savingsTarget,
+    notes
   }
 }
 

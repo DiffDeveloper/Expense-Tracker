@@ -2,8 +2,8 @@ import { createError, getRouterParam } from 'h3'
 import { deleteExpense } from '../../utils/db'
 import { requireSessionUser } from '../../utils/session'
 
-export default defineEventHandler((event) => {
-  const user = requireSessionUser(event)
+export default defineEventHandler(async (event) => {
+  const user = await requireSessionUser(event)
   const expenseId = getRouterParam(event, 'id')
 
   if (!expenseId) {
@@ -13,7 +13,7 @@ export default defineEventHandler((event) => {
     })
   }
 
-  const deleted = deleteExpense(user.id, expenseId)
+  const deleted = await deleteExpense(user.id, expenseId)
 
   if (!deleted) {
     throw createError({
